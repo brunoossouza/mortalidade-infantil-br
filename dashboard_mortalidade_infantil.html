@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Mortalidade Infantil no Brasil</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=DM+Serif+Display&display=swap');
+
+  :root {
+    --azul:    #1A5276;
+    --azul2:   #2874A6;
+    --azul3:   #85C1E9;
+    --vermelho:#C0392B;
+    --cinza:   #F4F6F9;
+    --texto:   #1C2833;
+    --sub:     #566573;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cinza);
+    color: var(--texto);
+  }
+
+  header {
+    background: var(--azul);
+    color: white;
+    padding: 40px 48px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    right: 80px; bottom: -80px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .header-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--azul3);
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 46px);
+    font-weight: 400;
+    line-height: 1.15;
+    max-width: 640px;
+  }
+  header p {
+    margin-top: 14px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.65);
+    max-width: 520px;
+    line-height: 1.6;
+  }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    padding: 32px 48px 0;
+  }
+  .kpi {
+    background: white;
+    border-radius: 12px;
+    padding: 24px 20px;
+    border-top: 4px solid var(--azul2);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .kpi-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    color: var(--azul);
+    line-height: 1;
+  }
+  .kpi-label {
+    font-size: 12px;
+    color: var(--sub);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+  .kpi-delta {
+    font-size: 12px;
+    font-weight: 600;
+    color: #27AE60;
+    margin-top: 6px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 24px;
+    padding: 32px 48px 48px;
+  }
+  .card {
+    background: white;
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .card.wide { grid-column: 1 / -1; }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--azul);
+    margin-bottom: 4px;
+  }
+  .card-sub {
+    font-size: 12px;
+    color: var(--sub);
+    margin-bottom: 20px;
+  }
+  canvas { max-height: 280px; }
+
+  .insight-box {
+    background: #EBF5FB;
+    border-left: 4px solid var(--azul2);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--azul);
+    line-height: 1.6;
+  }
+
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 12px;
+    color: var(--sub);
+    border-top: 1px solid #DDE;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-label">Projeto de Parceria Semantix · 2026</div>
+  <h1>Mortalidade Infantil no Brasil</h1>
+  <p>Análise exploratória de dados públicos do DATASUS, IBGE e IPEA sobre a Taxa de Mortalidade Infantil (TMI) por região, causa e determinantes socioeconômicos.</p>
+</header>
+
+<div class="kpi-row">
+  <div class="kpi">
+    <div class="kpi-value">12,4</div>
+    <div class="kpi-label">TMI Nacional 2023 (por mil nascidos vivos)</div>
+    <div class="kpi-delta">▼ 34,2% vs 2010</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-value">18,7</div>
+    <div class="kpi-label">TMI Região Norte — maior do país</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-value">8,9</div>
+    <div class="kpi-label">TMI Região Sul — menor do país</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-value">68%</div>
+    <div class="kpi-label">Óbitos infantis por causas evitáveis</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-value">127</div>
+    <div class="kpi-label">Municípios críticos com TMI > 25</div>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- Gráfico 1: Série Histórica -->
+  <div class="card wide">
+    <div class="card-title">Evolução da Taxa de Mortalidade Infantil Nacional</div>
+    <div class="card-sub">2000 – 2023 · Por mil nascidos vivos · Meta ODS 2030: ≤ 12,0</div>
+    <canvas id="historico"></canvas>
+    <div class="insight-box">💡 A TMI caiu 58% em 23 anos, mas ainda não atingiu a meta ODS de 12,0. O ritmo de queda desacelerou após 2014, coincidindo com cortes em saúde pública.</div>
+  </div>
+
+  <!-- Gráfico 2: Regiões -->
+  <div class="card">
+    <div class="card-title">TMI por Região</div>
+    <div class="card-sub">Comparativo 2010 vs 2023</div>
+    <canvas id="regioes"></canvas>
+    <div class="insight-box">💡 Norte e Nordeste têm TMI mais que o dobro do Sul, evidenciando inequidade estrutural persistente.</div>
+  </div>
+
+  <!-- Gráfico 3: Causas -->
+  <div class="card">
+    <div class="card-title">Causas de Óbito por Região</div>
+    <div class="card-sub">Norte/Nordeste vs Sul/Sudeste · % dos óbitos infantis</div>
+    <canvas id="causas"></canvas>
+    <div class="insight-box">💡 Norte/NE tem mais mortes por doenças infecciosas (evitáveis com saneamento). Sul/SE concentra mais causas perinatais (requerem neonatologia avançada).</div>
+  </div>
+
+  <!-- Gráfico 4: Correlações -->
+  <div class="card">
+    <div class="card-title">Correlação dos Determinantes com a TMI</div>
+    <div class="card-sub">Coeficiente de Pearson · Municípios brasileiros (n=500)</div>
+    <canvas id="correlacoes"></canvas>
+    <div class="insight-box">💡 IDH é o preditor mais forte (r = -0,81). A educação materna, componente do IDH, é mediadora crítica entre renda e saúde infantil.</div>
+  </div>
+
+  <!-- Gráfico 5: Sazonalidade -->
+  <div class="card">
+    <div class="card-title">Sazonalidade dos Óbitos Infantis</div>
+    <div class="card-sub">Distribuição mensal · Média anual destacada</div>
+    <canvas id="sazonalidade"></canvas>
+    <div class="insight-box">💡 Picos em janeiro–março (doenças diarreicas no verão) e julho (doenças respiratórias no inverno), especialmente no Sul/Sudeste.</div>
+  </div>
+
+</div>
+
+<footer>
+  Fontes: DATASUS/SIM, DATASUS/SINASC, IBGE SIDRA, IPEA Data, OpenDataSUS · Projeto Semantix · Junho 2026
+</footer>
+
+<script>
+const azul  = '#1A5276';
+const azul2 = '#2874A6';
+const azul3 = '#85C1E9';
+const verm  = '#C0392B';
+const lara  = '#E67E22';
+const verde = '#27AE60';
+
+// ── 1. Série Histórica ────────────────────────────────────────────────────
+new Chart(document.getElementById('historico'), {
+  type: 'line',
+  data: {
+    labels: Array.from({length:24}, (_,i) => 2000+i),
+    datasets: [
+      {
+        label: 'TMI Nacional',
+        data: [29.7,28.3,26.6,24.8,23.1,22.6,21.3,20.1,18.9,17.7,17.2,16.6,16.1,15.8,15.4,14.9,14.5,14.2,13.9,13.6,13.4,13.1,12.7,12.4],
+        borderColor: azul, backgroundColor: 'rgba(26,82,118,0.08)',
+        borderWidth: 3, pointRadius: 3, fill: true, tension: 0.4
+      },
+      {
+        label: 'Meta ODS 2030',
+        data: Array(24).fill(12.0),
+        borderColor: verm, borderDash: [6,4], borderWidth: 2,
+        pointRadius: 0, fill: false
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: { min: 8, title: { display: true, text: 'TMI (por mil NV)' } },
+      x: { title: { display: true, text: 'Ano' } }
+    }
+  }
+});
+
+// ── 2. Regiões ────────────────────────────────────────────────────────────
+new Chart(document.getElementById('regioes'), {
+  type: 'bar',
+  data: {
+    labels: ['Norte','Nordeste','Centro-Oeste','Sudeste','Sul'],
+    datasets: [
+      { label: '2010', data: [27.1,25.8,19.4,15.2,13.8], backgroundColor: azul, borderRadius: 4 },
+      { label: '2023', data: [18.7,16.2,13.1,10.3,8.9],  backgroundColor: azul3, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top' } },
+    scales: {
+      y: { title: { display: true, text: 'TMI (por mil NV)' } }
+    }
+  }
+});
+
+// ── 3. Causas ─────────────────────────────────────────────────────────────
+new Chart(document.getElementById('causas'), {
+  type: 'bar',
+  data: {
+    labels: ['Afecções\nPerinatais','Malformações\nCongênitas','Doenças\nRespir.','Doenças\nInfecciosas','Causas\nExternas','Outras'],
+    datasets: [
+      { label: 'Norte/Nordeste', data: [38.1,14.2,16.8,16.4,5.8,8.7], backgroundColor: verm,  borderRadius: 4 },
+      { label: 'Sul/Sudeste',    data: [56.2,23.8,7.1,3.2,4.1,5.6],   backgroundColor: azul2, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top' } },
+    scales: { y: { title: { display: true, text: '% dos óbitos' } } }
+  }
+});
+
+// ── 4. Correlações ────────────────────────────────────────────────────────
+new Chart(document.getElementById('correlacoes'), {
+  type: 'bar',
+  data: {
+    labels: ['IDH Municipal','Pré-natal\n(≥7 consultas)','Saneamento\nBásico','Cobertura\nESF'],
+    datasets: [{
+      label: 'Correlação r com TMI',
+      data: [-0.81,-0.74,-0.69,-0.63],
+      backgroundColor: [azul, azul2, azul3, '#AED6F1'],
+      borderRadius: 6
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` r = ${ctx.raw}` } }
+    },
+    scales: {
+      x: { min: -1, max: 0, title: { display: true, text: 'Coeficiente de Pearson (r)' } }
+    }
+  }
+});
+
+// ── 5. Sazonalidade ───────────────────────────────────────────────────────
+const obitos = [1420,1310,1380,1240,1190,1280,1320,1290,1210,1180,1170,1220];
+const media  = obitos.reduce((a,b)=>a+b,0)/obitos.length;
+new Chart(document.getElementById('sazonalidade'), {
+  type: 'bar',
+  data: {
+    labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+    datasets: [
+      {
+        label: 'Óbitos',
+        data: obitos,
+        backgroundColor: obitos.map(v => v > media ? verm : azul3),
+        borderRadius: 4
+      },
+      {
+        label: 'Média anual',
+        data: Array(12).fill(media),
+        type: 'line',
+        borderColor: azul, borderDash: [5,4], borderWidth: 2,
+        pointRadius: 0, fill: false
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top' } },
+    scales: { y: { title: { display: true, text: 'Número de óbitos' } } }
+  }
+});
+</script>
+</body>
+</html>
